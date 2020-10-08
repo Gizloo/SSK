@@ -1,4 +1,8 @@
+import datetime
 import os
+import time
+from pprint import pprint
+
 from openpyxl import Workbook
 from openpyxl.styles import Font
 import win32com.client
@@ -9,7 +13,7 @@ class ExcelManager:
         self.path = os.path.join(os.getcwd(), 'Отчеты')
         self.format_file = '.xlsx'
 
-    def handler_excel(self, contractor):
+    def handler_excel(self, contractor, report_data):
         if not os.path.exists(self.path):
             os.makedirs(self.path)
         os.chdir(self.path)
@@ -70,6 +74,92 @@ class ExcelManager:
 
         # -4108 центр
         # -4152 право
+        start_row = 8
+        sheet.Cells(start_row, 2).Value = '№'
+        sheet.Cells(start_row, 3).Value = 'Группировка'
+        sheet.Cells(start_row, 3).ColumnWidth = 20
+        sheet.Cells(start_row, 4).Value = 'Начало'
+        sheet.Cells(start_row, 4).ColumnWidth = 20
+        sheet.Cells(start_row, 5).Value = 'Конец'
+        sheet.Cells(start_row, 5).ColumnWidth = 20
+        sheet.Cells(start_row, 6).Value = 'Часы               (в Работе)'
+        sheet.Cells(start_row, 7).Value = 'Часы (Дежурство)'
+        sheet.Cells(start_row, 8).Value = 'Пробег'
+        sheet.Cells(start_row, 9).Value = 'Часы               (в Работе) скорректир.'
+        sheet.Cells(start_row, 10).Value = 'Часы (Дежурство) скорректир.'
+        sheet.Cells(start_row, 11).Value = 'Пробег скоррект'
+
+        # Selection = sheet.Range((start_row, 2), (start_row, 11))
+        sheet.Cells(start_row, 2).EntireRow.HorizontalAlignment = -4108
+        sheet.Cells(start_row, 2).EntireRow.WrapText = True
+
+        Selection = sheet.Range('F1:K1')
+        Selection.ColumnWidth = 12
+
+        sheet.Cells(start_row, 12).Value = 'Нач. положение'
+        sheet.Cells(start_row, 13).Value = 'Кон. положение'
+
+        sheet.Cells(start_row, 12).ColumnWidth = 35
+        sheet.Cells(start_row, 13).ColumnWidth = 35
+        n = 0
+        num_obj = 0
+        for obj, data in report_data.items():
+            num_obj += 1
+            start_row += 1
+            sheet.Cells(start_row, 2).Value = num_obj
+            sheet.Cells(start_row, 3).Value = obj
+            sheet.Cells(start_row, 6).Value = ''
+            sheet.Cells(start_row, 7).Value = ''
+            sheet.Cells(start_row, 8).Value = ''
+            sheet.Cells(start_row, 9).Value = ''
+            sheet.Cells(start_row, 10).Value = ''
+            sheet.Cells(start_row, 11).Value = ''
+            # sheet.Cells(start_row, 12).Value = data[0][10]
+            # sheet.Cells(start_row, 13).Value = data[len(data)-1][11]
+
+            obj_row = 1
+            maxim = 99999999999999
+            minim = 0
+            # pprint(data)
+            for number, travel in data.items():
+                # pprint(travel)
+                for num_con, cotr in sorted(travel.items()):
+                    # pprint(cotr)
+
+                    sheet.Cells(9, 4).Value = min(int(cotr[2]), maxim)
+                    maxim = int(sheet.Cells(9, 4).Value)
+
+                    sheet.Cells(9, 5).Value = max(int(cotr[3]), minim)
+                    maxim = int(sheet.Cells(9, 5).Value)
+
+                    start_row += 1
+                    num_el = str(num_obj) + '.' + str(obj_row)
+                    sheet.Cells(start_row, 2).NumberFormat = "@"
+                    sheet.Cells(start_row, 2).HorizontalAlignment = -4152
+                    sheet.Cells(start_row, 2).Value = num_el
+
+                    sheet.Cells(start_row, 3).Value = f'({cotr[1]}) ' + str(num_con)
+
+                    sheet.Cells(start_row, 4).Value = \
+                        datetime.datetime.fromtimestamp(int(cotr[2])).strftime('%d.%m.%Y %H:%M:%S')
+                    sheet.Cells(start_row, 5).Value = \
+                        datetime.datetime.fromtimestamp(int(cotr[3])).strftime('%d.%m.%Y %H:%M:%S')
+
+                    sheet.Cells(start_row, 6).Value = cotr[4]
+                    sheet.Cells(start_row, 7).Value = cotr[5]
+                    sheet.Cells(start_row, 8).Value = cotr[6]
+                    sheet.Cells(start_row, 9).Value = round(float(cotr[7]), 0)
+                    sheet.Cells(start_row, 10).Value = round(float(cotr[8]), 0)
+                    sheet.Cells(start_row, 11).Value = round(float(cotr[9]), 0)
+                    sheet.Cells(start_row, 12).Value = cotr[10]
+                    sheet.Cells(start_row, 13).Value = cotr[11]
+                    obj_row += 1
+        #     sheet.Cells(start_row+int(data.key), 2).Value = data[1]
+
+        sheet.Cells(9, 4).Value = \
+            datetime.datetime.fromtimestamp(int(sheet.Cells(9, 4).Value)).strftime('%d.%m.%Y %H:%M:%S')
+        sheet.Cells(9, 5).Value = \
+            datetime.datetime.fromtimestamp(int(sheet.Cells(9, 5).Value)).strftime('%d.%m.%Y %H:%M:%S')
 
         work_b1.Save()
         work_b1.Close()
