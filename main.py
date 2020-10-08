@@ -1,12 +1,14 @@
 from pprint import pprint
-
-from SSK.wialon_app import WialonManager
+from wialon_app import WialonManager
+from excel import ExcelManager
 
 
 def handler_all(group_base):
     report_data = None
     for group, data in group_base.items():
         report_data = WialonManager().exec_report(data)
+        ExcelManager().handler_excel(group)
+        # pprint(report_data)
         break
 
     # pprint(report_data)

@@ -38,7 +38,7 @@ class WialonManager:
         return self.base_group
 
     def exec_report(self, group):
-        result_rep = defaultdict(str)
+        result_rep = {}
         report = self.wialon.report_exec_report({
             'reportResourceId': self.res_id,
             'reportTemplateId': 1,
@@ -55,15 +55,23 @@ class WialonManager:
         })
 
         for n in range(0, rows_obj):
-            print(n)
             rep_sub_row = self.wialon.report_get_result_subrows({
-                                          "tableIndex": 0,
-                                          "rowIndex": n
-                                  })
-            for row in rep_sub_row:
-                pprint(row)
-                print(rep_row[n]['c'][1])
-                # result_rep[rep_row[n]['c'][1]] += [row['c'][1], ]
-            if n > 2:
-                return rep_row
-        return rep_row
+                "tableIndex": 0,
+                "rowIndex": n
+            })
+            result_rep[rep_row[n]['c'][1]] = {}
+            for num, row in enumerate(rep_sub_row):
+                # pprint(row)
+                result_rep[rep_row[n]['c'][1]][num] = [row['c'][1],  # имя
+                                                       row['c'][3],  # начало
+                                                       row['c'][5],  # конец
+                                                       row['c'][6],  # часы в работе
+                                                       row['c'][7],  # часы в дежурстве
+                                                       row['c'][8],  # пробег
+                                                       row['c'][9],  # часы в работе (коррк)
+                                                       row['c'][10],  # часы в дежурстве (коррк)
+                                                       row['c'][11]['t'],  # нач. положение
+                                                       row['c'][12]['t'],  # кон. положение
+                                                       ]
+
+        return result_rep
