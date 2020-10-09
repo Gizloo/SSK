@@ -38,14 +38,14 @@ class WialonManager:
                 self.base_group[group['nm']] = [group['id'], len(group['u'])]
         return self.base_group
 
-    def exec_report(self, group):
+    def exec_report(self, group, smena, from_time, to_time):
         result_rep = {}
         report = self.wialon.report_exec_report({
             'reportResourceId': self.res_id,
-            'reportTemplateId': 1,
+            'reportTemplateId': smena,
             'reportObjectId': group[0],
             'reportObjectSecId': 0,
-            'interval': {'from': 1598893200 + 25200, 'to': 1599670800 + 25200, 'flags': 0}})
+            'interval': {'from': from_time, 'to': to_time, 'flags': 0}})
 
         rows_obj = report['reportResult']['tables'][0]['rows']
 
@@ -60,25 +60,15 @@ class WialonManager:
                 "rowIndex": n
             })
 
-            rep_sub_row2 = self.wialon.report_get_result_subrows({
-                "tableIndex": 1,
-                "rowIndex": n
-            })
-
-            rep_sub_row3 = self.wialon.report_get_result_subrows({
-                "tableIndex": 2,
-                "rowIndex": n
-            })
-
             obj_name = rep_row[n]['c'][1]
-            result_rep[obj_name] = defaultdict(dict)
+            result_rep[obj_name] = defaultdict(list)
             for row1 in rep_sub_row:
-                result_rep[obj_name][row1['c'][1]] = {}
-                result_rep[obj_name][row1['c'][1]]['Смена1'] = [
+                unix_key = row1['c'][3][:-3]
+                result_rep[obj_name][unix_key] = [
                     row1['c'][0],  # номер строки
                     row1['c'][1],  # имя
-                    row1['c'][3][:-3],  # начало
-                    row1['c'][5][:-3],  # конец
+                    int(row1['c'][3][:-3]),  # начало
+                    int(row1['c'][5][:-3]),  # конец
                     row1['c'][6],  # часы в работе
                     row1['c'][7],  # часы в дежурстве
                     row1['c'][8],  # пробег
@@ -91,41 +81,5 @@ class WialonManager:
                     row1['c'][12]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
                     # кон. положение
                 ]
-            for row2 in rep_sub_row2:
-                pprint(rep_sub_row2)
-                result_rep[obj_name][row2['c'][1]]['Смена2'] = [
-                    row2['c'][0],  # номер строки
-                    row2['c'][1],  # имя
-                    row2['c'][3][:-3],  # начало
-                    row2['c'][5][:-3],  # конец
-                    row2['c'][6],  # часы в работе
-                    row2['c'][7],  # часы в дежурстве
-                    row2['c'][8],  # пробег
-                    round(float(row2['c'][9]), 2),  # часы в работе (коррк)
-                    round(float(row2['c'][10]), 2),  # часы в дежурстве (коррк)
-                    round(float(row2['c'][8]), 2),  # пробег (коррк)
 
-                    row2['c'][11]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
-                    row2['c'][12]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
-                ]
-            for row3 in rep_sub_row3:
-                pprint(rep_sub_row3)
-                result_rep[obj_name][row3['c'][1]]['Смена3'] = [
-                    row3['c'][0],  # номер строки
-                    row3['c'][1],  # имя
-                    row3['c'][3][:-3],  # начало
-                    row3['c'][5][:-3],  # конец
-                    row3['c'][6],  # часы в работе
-                    row3['c'][7],  # часы в дежурстве
-                    row3['c'][8],  # пробег
-
-                    round(float(row3['c'][9]), 2),  # часы в работе (коррк)
-                    round(float(row3['c'][10]), 2),  # часы в дежурстве (коррк)
-                    round(float(row3['c'][8]), 2),  # пробег (коррк)
-
-                    row3['c'][11]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
-                    row3['c'][12]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
-                ]
-
-        # pprint(result_rep)
         return result_rep
