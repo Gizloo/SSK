@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import os
 import sys
 from pprint import pprint
 from wialon_app import WialonManager
@@ -8,22 +9,33 @@ from time_set import time_conv
 
 
 def handler_all(group_base, smena, from_time, to_time, f_date, t_date):
-    report_data = None
+    path = os.path.join(os.getcwd(), 'Отчеты')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    os.chdir(path)
     for group, data in group_base.items():
         print(group)
-        report_data = WialonManager().exec_report(data, smena[0], from_time, to_time)
-        ExcelManager().handler_excel(group, report_data, smena[1], f_date, t_date)
-        print('Обработан')
+        try:
+            report_data = WialonManager().exec_report(data, smena[0], from_time, to_time)
+            ExcelManager().handler_excel(group, report_data, smena[1], f_date, t_date, path)
+            print('Обработан')
+        except:
+            print('Данных за период нет')
 
 
 def handler_single(group, data, smena, from_time, to_time, f_date, t_date):
+    path = os.path.join(os.getcwd(), 'Отчеты')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    os.chdir(path)
     report_data = WialonManager().exec_report(data, smena[0], from_time, to_time)
-    ExcelManager().handler_excel(group, report_data, smena[1], f_date, t_date)
+    ExcelManager().handler_excel(group, report_data, smena[1], f_date, t_date, path)
 
 
 if __name__ == '__main__':
     groups = WialonManager().api_get_groups()
     group_dict = {}
+    group_dict['0'] = 'all'
     while True:
         print('0. Все подрядчики')
         for num, group in enumerate(groups):
@@ -42,10 +54,10 @@ if __name__ == '__main__':
 
     smena_dict = \
         {
-        '1': [4, 'Смена 1'],  # 1 cмена
-        '2': [5, 'Смена 2'],  # 2 cмена
-        '3': [1, 'Смена 1 и 2'],  # 1 и 2 смена
-        '4': [6, 'Смена 3'],  # 3 cмена
+        '1': [4, 'Смена 1'],
+        '2': [5, 'Смена 2'],
+        '3': [1, 'Смена 1 и 2'],
+        '4': [6, 'Смена 3'],
     }
     while True:
         choice = input('Выберете смену:\n'

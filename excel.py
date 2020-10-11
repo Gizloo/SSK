@@ -11,15 +11,12 @@ import win32com.client
 
 class ExcelManager:
     def __init__(self):
-        self.path = os.path.join(os.getcwd(), 'Отчеты')
         self.format_file = '.xlsx'
 
-    def handler_excel(self, contractor, report_data, smena, f_date, t_date):
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
-        os.chdir(self.path)
+    def handler_excel(self, contractor, report_data, smena, f_date, t_date, path):
         filename = contractor + ' ' + smena + f' ({f_date}-{t_date})' + self.format_file
-        path = os.path.join(self.path, filename)
+        path = os.path.join(path, filename)
+
         wb = Workbook()
         wb.create_sheet('Сводка', 0)
         ws = wb.active
@@ -30,6 +27,11 @@ class ExcelManager:
         work_b1 = excel.Workbooks.Open(path)
         sheet = work_b1.Worksheets(1)
         sheet.Cells(1, 5).Value = 'РЕЕСТР выполненных работ за период'
+
+        Selection = sheet.Range('A1:N7')
+        Selection.Interior.Color = 16777215
+        Selection.Interior.TintAndShade = 0
+        Selection.Interior.PatternTintAndShade = 0
 
         sheet.Cells(1, 5).Font.Size = 12
         sheet.Cells(1, 5).Font.Bold = True
@@ -50,8 +52,10 @@ class ExcelManager:
         sheet.Cells(5, 4).HorizontalAlignment = -4108
         sheet.Cells(6, 3).Value = 'подрядчик'
         sheet.Cells(6, 4).Value = contractor.replace('(ССК)', '').replace('(ССК-РС)', '').replace('(ССК-Т)', '')
+        sheet.Cells(6, 4).HorizontalAlignment = -4108
         Selection = sheet.Range('C4:C6')
         Selection.HorizontalAlignment = -4152
+
 
         sheet.Cells(4, 5).Value = 'дневная смена'
         sheet.Cells(5, 5).Value = 'ночная смена'
@@ -146,10 +150,13 @@ class ExcelManager:
                 sheet.Cells(start_row, 2).HorizontalAlignment = -4152
                 sheet.Cells(start_row, 2).Value = num_el
                 sheet.Cells(start_row, 3).Value = travel[1]
+
                 sheet.Cells(start_row, 4).Value = \
-                    datetime.datetime.fromtimestamp(int(travel[2])).strftime('%d.%m.%Y %H:%M:%S')
+                    datetime.datetime.fromtimestamp(int(travel[2])+14400).strftime('%d.%m.%Y %H:%M:%S')
+                # print(sheet.Cells(start_row, 4).Value)
                 sheet.Cells(start_row, 5).Value = \
-                    datetime.datetime.fromtimestamp(int(travel[3])).strftime('%d.%m.%Y %H:%M:%S')
+                    datetime.datetime.fromtimestamp(int(travel[3])+14400).strftime('%d.%m.%Y %H:%M:%S')
+                # print(sheet.Cells(start_row, 5).Value)
                 sheet.Cells(start_row, 6).Value = travel[4]
                 sheet.Cells(start_row, 7).Value = travel[5]
                 sheet.Cells(start_row, 8).Value = travel[6]
@@ -167,17 +174,96 @@ class ExcelManager:
 
             sheet.Cells(main_row, 4).Value = sheet.Cells(main_row + 1, 4).Value
             sheet.Cells(main_row, 5).Value = sheet.Cells(start_row, 5).Value
+
+            sheet.Cells(main_row, 12).Value = sheet.Cells(main_row + 1, 12).Value
+            sheet.Cells(main_row, 13).Value = sheet.Cells(start_row, 13).Value
+
+            sheet.Cells(main_row, 6).FormulaR1C1 = f"=SUM(R[1]C:R[{obj_row-1}]C)"
+            sheet.Cells(main_row, 7).FormulaR1C1 = f"=SUM(R[1]C:R[{obj_row - 1}]C)"
+            sheet.Cells(main_row, 8).FormulaR1C1 = f"=SUM(R[1]C:R[{obj_row - 1}]C)"
+
+            Selection = sheet.Range(sheet.Cells(main_row + 1, 4), sheet.Cells(start_row, 5))
+            Selection.Rows.Group()
+
             sheet.Cells(main_row, 9).Value = sum_work
             sheet.Cells(main_row, 10).Value = sum_duty
             sheet.Cells(main_row, 11).Value = sum_mill
 
-        sheet.Cells(start_row+2, 4).Value = 'Исполнитель'
-        # sheet.Cells(start_row + 2, 4).Font.Bold = True
-        # Selection = sheet.Range(f'E{start_row+1}:I{start_row+1}')
-        # Selection.Borders.Bottom = True
-
         Selection = sheet.Range('B8:M' + str(start_row))
         Selection.Borders.Weight = 2
+
+        sheet.Cells(start_row+2, 4).Value = 'Исполнитель'
+
+        sheet.Cells(start_row + 2, 4).HorizontalAlignment = -4152
+        sheet.Cells(start_row + 2, 4).RowHeight = 20
+
+        sheet.Cells(start_row + 3, 5).Value = 'подпись'
+        sheet.Cells(start_row + 3, 5).HorizontalAlignment = -4108
+
+        sheet.Cells(start_row + 3, 6).Value = 'ФИО'
+
+        Selection = sheet.Range(f'F{start_row+3}:G{start_row+3}')
+        Selection.HorizontalAlignment = -4108
+        Selection.Merge()
+
+        sheet.Cells(start_row + 3, 9).Value = 'дата'
+        sheet.Cells(start_row + 3, 9).HorizontalAlignment = -4108
+
+        sheet.Cells(start_row + 4, 4).Value = 'Согласовано:'
+
+        sheet.Cells(start_row + 6, 4).Value = 'Представитель Заказчика'
+        sheet.Cells(start_row + 6, 4).HorizontalAlignment = -4152
+
+        sheet.Cells(start_row + 7, 5).Value = 'подпись'
+        sheet.Cells(start_row + 7, 5).HorizontalAlignment = -4108
+
+        sheet.Cells(start_row + 7, 6).Value = 'ФИО'
+
+        Selection = sheet.Range(f'F{start_row + 6}:G{start_row + 6}')
+        Selection.HorizontalAlignment = -4108
+        Selection.Merge()
+
+        sheet.Cells(start_row + 7, 9).Value = 'дата'
+        sheet.Cells(start_row + 7, 9).HorizontalAlignment = -4108
+
+        Selection = sheet.Range(f'B{start_row+2}:L{start_row+9}')
+        Selection.Interior.Color = 16777215
+        Selection.Interior.TintAndShade = 0
+        Selection.Interior.PatternTintAndShade = 0
+        Selection.Font.Bold = True
+
+        sheet.Cells(start_row + 2, 4).Font.Bold = True
+        Selection = sheet.Range(f'E{start_row+2}:I{start_row+2}')
+        xlEdgeBottom = 9
+        xlContinuous = 1
+        xlEdgeRight = 10
+        xlEdgeLeft = 7
+        xlEdgeTop = 8
+        xlDash = -4115
+
+        xlMedium = -4138
+        xlDiagonalDown = 5
+        xlDiagonalUp = 6
+        xlInsideVertical = 11
+        xlInsideHorizontal = 12
+
+        Selection.Borders(xlEdgeBottom).LineStyle = xlContinuous
+
+        Selection = sheet.Range(f'E{start_row + 6}:I{start_row + 6}')
+        Selection.Borders(xlEdgeBottom).LineStyle = xlContinuous
+
+        Selection = sheet.Range(f'C{start_row + 2}:J{start_row + 8}')
+        Selection.Borders(xlEdgeBottom).LineStyle = xlDash
+        Selection.Borders(xlEdgeBottom).Weight = xlMedium
+
+        Selection.Borders(xlEdgeRight).LineStyle = xlDash
+        Selection.Borders(xlEdgeRight).Weight = xlMedium
+
+        Selection.Borders(xlEdgeTop).LineStyle = xlDash
+        Selection.Borders(xlEdgeTop).Weight = xlMedium
+
+        Selection.Borders(xlEdgeLeft).LineStyle = xlDash
+        Selection.Borders(xlEdgeLeft).Weight = xlMedium
 
         work_b1.Save()
         work_b1.Close()

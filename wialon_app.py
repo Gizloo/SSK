@@ -54,6 +54,9 @@ class WialonManager:
             "indexFrom": 0,
             "indexTo": rows_obj
         })
+
+        # pprint(rep_row)
+
         for n in range(0, rows_obj):
             rep_sub_row = self.wialon.report_get_result_subrows({
                 "tableIndex": 0,
@@ -63,12 +66,12 @@ class WialonManager:
             obj_name = rep_row[n]['c'][1]
             result_rep[obj_name] = defaultdict(list)
             for row1 in rep_sub_row:
-                unix_key = row1['c'][3][:-3]
+                unix_key = int(row1['c'][3][:-3]) - 7200
                 result_rep[obj_name][unix_key] = [
                     row1['c'][0],  # номер строки
                     row1['c'][1],  # имя
-                    int(row1['c'][3][:-3]),  # начало
-                    int(row1['c'][5][:-3]),  # конец
+                    int(row1['c'][3][:-3]) - 7200,  # начало
+                    int(row1['c'][5][:-3]) - 7200,  # конец
                     row1['c'][6],  # часы в работе
                     row1['c'][7],  # часы в дежурстве
                     row1['c'][8],  # пробег
