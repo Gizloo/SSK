@@ -35,8 +35,12 @@ class WialonManager:
         groups = units['items']
         for group in groups:
             if group['nm'] != 'ССК Подрядчики':
-                self.base_group[group['nm']] = [group['id'], len(group['u'])]
+                self.base_group[group['nm']] = [group['id'], len(group['u']), group['u']]
         return self.base_group
+
+    def api_get_obj(self, id):
+        obj = self.wialon.core_search_item({'id': int(id), 'flags': 1})
+        return obj['item']['nm']
 
     def exec_report(self, group, smena, from_time, to_time):
         result_rep = {}
