@@ -44,6 +44,7 @@ class WialonManager:
 
     def exec_report(self, group, smena, from_time, to_time):
         result_rep = {}
+
         report = self.wialon.report_exec_report({
             'reportResourceId': self.res_id,
             'reportTemplateId': smena,

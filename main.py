@@ -16,7 +16,9 @@ def handler_all(group_base, smena, from_time, to_time, f_date, t_date):
     for group, data in group_base.items():
         print(group)
         try:
+            print('Формируем отчет...')
             report_data = WialonManager().exec_report(data, smena[0], from_time, to_time)
+            print('Выгружаем данные в excel...')
             ExcelManager().handler_excel(group, report_data, smena[1], f_date, t_date, path)
             print('Обработан')
         except:
@@ -28,17 +30,23 @@ def handler_single(group, data, smena, from_time, to_time, f_date, t_date):
     if not os.path.exists(path):
         os.makedirs(path)
     os.chdir(path)
+    print('Формируем отчет...')
     report_data = WialonManager().exec_report(data, smena[0], from_time, to_time)
+    print('Выгружаем данные в excel...')
     ExcelManager().handler_excel(group, report_data, smena[1], f_date, t_date, path)
+    print('Обработан')
 
 
-def handler_single_obj(obj_name, obj_data, smena, from_time, to_time, f_date, t_date):
+def handler_single_obj(obj_name, obj_data, smena, from_time, to_time, f_date, t_date, company=None):
     path = os.path.join(os.getcwd(), 'Отчеты')
     if not os.path.exists(path):
         os.makedirs(path)
     os.chdir(path)
+    print('Формируем отчет...')
     report_data = WialonManager().exec_report(obj_data, smena[0], from_time, to_time)
-    ExcelManager().handler_excel(obj_name, report_data, smena[1], f_date, t_date, path)
+    print('Выгружаем данные в excel...')
+    ExcelManager().handler_excel(obj_name, report_data, smena[1], f_date, t_date, path, company=company)
+    print('Обработан')
 
 
 if __name__ == '__main__':
@@ -56,20 +64,19 @@ if __name__ == '__main__':
         choice_group = input('Введите номер подрядчика: ')
         if choice_group in group_dict:
             if choice_group != 0:
-                print(groups[group_dict[choice_group]])
+                # print(groups[group_dict[choice_group]])
                 objs = groups[group_dict[choice_group]][2]
                 obj_dict = {}
-                obj_dict['0'] = 'all'
+                print('Загружаем машины...')
                 for num, obj in enumerate(objs):
                     obj_dict[num+1] = [WialonManager().api_get_obj(obj), obj]
-
                 while True:
                     print('0. Все объекты')
                     for num, obj in obj_dict.items():
                         sys.stdout.write(f'{num}. {obj[0]:30}     ')
-                        if num % 2 == 0:
+                        if int(num) % 2 == 0:
                             print('')
-                    choice_obj = input('Введите номер подрядчика: ')
+                    choice_obj = int(input('Введите номер объекта: '))
                     if choice_obj in obj_dict:
                         break
                     else:
@@ -108,13 +115,13 @@ if __name__ == '__main__':
         except:
             continue
 
+    group = group_dict[str(choice_group)]
     smena = smena_dict[choice]
+
     if choice_group == '0':
         handler_all(groups, smena, from_time, to_time, f_date, t_date)
-
     elif choice_obj == '0':
-        group = group_dict[str(choice_group)]
         handler_single(group, groups[group], smena, from_time, to_time, f_date, t_date)
     else:
-        obj = obj_dict[str(choice_obj)]
-        handler_single_obj(obj[0], obj[1], smena, from_time, to_time, f_date, t_date)
+        obj = obj_dict[choice_obj]
+        handler_single_obj(obj[0], [obj[1], ], smena, from_time, to_time, f_date, t_date, group)

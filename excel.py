@@ -13,7 +13,9 @@ class ExcelManager:
     def __init__(self):
         self.format_file = '.xlsx'
 
-    def handler_excel(self, contractor, report_data, smena, f_date, t_date, path):
+    def handler_excel(self, contractor, report_data, smena, f_date, t_date, path, company=None):
+        if company:
+            contractor = f'{company} - {contractor} '
         filename = contractor + ' ' + smena + f' ({f_date}-{t_date})' + self.format_file
         path = os.path.join(path, filename)
 
@@ -21,8 +23,8 @@ class ExcelManager:
         wb.create_sheet('Сводка', 0)
         ws = wb.active
         ws.auto_filter.ref = 'B8:M8'
-        # ws.auto_filter.ref = 'A2:AD2'
         wb.save(filename)
+
         excel = win32com.client.Dispatch("Excel.Application")
         work_b1 = excel.Workbooks.Open(path)
         sheet = work_b1.Worksheets(1)
@@ -56,7 +58,6 @@ class ExcelManager:
         Selection = sheet.Range('C4:C6')
         Selection.HorizontalAlignment = -4152
 
-
         sheet.Cells(4, 5).Value = 'дневная смена'
         sheet.Cells(5, 5).Value = 'ночная смена'
         sheet.Cells(6, 5).Value = 'разрывная смена'
@@ -80,8 +81,10 @@ class ExcelManager:
         Selection = sheet.Range('B8:M8')
         Selection.Interior.Color = 14803425
         Selection.Font.Bold = True
+
         # -4108 центр
         # -4152 право
+
         start_row = 8
         sheet.Cells(start_row, 2).Value = '№'
         sheet.Cells(start_row, 3).Value = 'Группировка'
@@ -97,7 +100,6 @@ class ExcelManager:
         sheet.Cells(start_row, 10).Value = 'Часы (Дежурство) скорректир.'
         sheet.Cells(start_row, 11).Value = 'Пробег скоррект'
         sheet.Cells(start_row, 11).ColumnWidth = 15
-        # Selection = sheet.Range((start_row, 2), (start_row, 11))
         sheet.Cells(start_row, 2).EntireRow.HorizontalAlignment = -4108
         sheet.Cells(start_row, 2).EntireRow.WrapText = True
 
@@ -109,11 +111,7 @@ class ExcelManager:
 
         sheet.Cells(start_row, 12).ColumnWidth = 45
         sheet.Cells(start_row, 13).ColumnWidth = 45
-        n = 0
         num_obj = 0
-        # report = sorted(report_data.items(), key=lambda item: item[0])
-        # report_dict = collections.OrderedDict(report)
-        # pprint(report_dict)
         time.sleep(30)
         for obj, data in report_data.items():
             sum_work = 0
@@ -135,15 +133,10 @@ class ExcelManager:
             Selection = sheet.Range(f'B{main_row}:M{main_row}')
             Selection.Interior.Color = 49407
             Selection.Font.Bold = True
-            # sheet.Cells(start_row, 12).Value = data[0][10]
-            # sheet.Cells(start_row, 13).Value = data[len(data)-1][11]
-
-            # pprint(data.items())
             obj_row = 1
             data_sort = sorted(data.items(), key=lambda x: x[0])
             data_order = collections.OrderedDict(data_sort)
             for number, travel in data_order.items():
-                # for num_con, cotr in travel.items():
                 start_row += 1
                 num_el = str(num_obj) + '.' + str(obj_row)
                 sheet.Cells(start_row, 2).NumberFormat = "@"
@@ -153,10 +146,10 @@ class ExcelManager:
 
                 sheet.Cells(start_row, 4).Value = \
                     datetime.datetime.fromtimestamp(int(travel[2])+14400).strftime('%d.%m.%Y %H:%M:%S')
-                # print(sheet.Cells(start_row, 4).Value)
+
                 sheet.Cells(start_row, 5).Value = \
                     datetime.datetime.fromtimestamp(int(travel[3])+14400).strftime('%d.%m.%Y %H:%M:%S')
-                # print(sheet.Cells(start_row, 5).Value)
+
                 sheet.Cells(start_row, 6).Value = travel[4]
                 sheet.Cells(start_row, 7).Value = travel[5]
                 sheet.Cells(start_row, 8).Value = travel[6]
