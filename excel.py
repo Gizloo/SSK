@@ -13,7 +13,9 @@ class ExcelManager:
     def __init__(self):
         self.format_file = '.xlsx'
 
-    def handler_excel(self, contractor, report_data, smena, f_date, t_date, path):
+    def handler_excel(self, contractor, report_data, smena, f_date, t_date, path, company=None):
+        if company:
+            contractor = f'{company} - {contractor} '
         filename = contractor + ' ' + smena + f' ({f_date}-{t_date})' + self.format_file
         path = os.path.join(path, filename)
 
@@ -21,8 +23,8 @@ class ExcelManager:
         wb.create_sheet('Сводка', 0)
         ws = wb.active
         ws.auto_filter.ref = 'B8:M8'
-        # ws.auto_filter.ref = 'A2:AD2'
         wb.save(filename)
+
         excel = win32com.client.Dispatch("Excel.Application")
         work_b1 = excel.Workbooks.Open(path)
         sheet = work_b1.Worksheets(1)
@@ -55,7 +57,6 @@ class ExcelManager:
         sheet.Cells(6, 4).HorizontalAlignment = -4108
         Selection = sheet.Range('C4:C6')
         Selection.HorizontalAlignment = -4152
-
 
         sheet.Cells(4, 5).Value = 'дневная смена'
         sheet.Cells(5, 5).Value = 'ночная смена'
