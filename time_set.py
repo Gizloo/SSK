@@ -8,6 +8,9 @@ def time_conv(date_f):
         d2, m2, y2 = t_date.split('.')
         now = datetime.datetime.now()
 
+        f_dt = datetime.datetime.strptime(f_date, '%d.%m.%Y').date()
+        t_dt = datetime.datetime.strptime(t_date, '%d.%m.%Y').date()
+
         if int(d) > 32 or int(m) > 12 or int(y) < 2019 or int(d) < 0 or int(m) < 0 or int(y) > int(now.year):
             print('Неверная дата')
             return
@@ -35,7 +38,7 @@ def time_conv(date_f):
 
             t1_s1_unix = int(str(time.mktime(t1.timetuple()))[:-2]) + 7200
             t2_s1_unix = int(str(time.mktime(t2.timetuple()))[:-2]) + 7200
-            return t1_s1_unix, t2_s1_unix, f_date, t_date
+            return t1_s1_unix, t2_s1_unix, f_date, t_date, f_dt, t_dt
 
         except Exception as exc:
             print(exc)

@@ -8,7 +8,10 @@ import time
 
 class WialonManager:
     def __init__(self):
-        self.token = '1e3f50514d35becfaf1b9ec8ff42f80014125DD4DBEADF212ED7DC3ED42D71466C71DF06'
+        # self.token = '1e3f50514d35becfaf1b9ec8ff42f80014125DD4DBEADF212ED7DC3ED42D71466C71DF06'  # Основной
+        self.token = '290a6913b07b4afce549894ab74c1d87913BAACC55F364819505234D43FAB9FA89FC72A6'  #ССК(п) Подрядчики_api
+        # self.token = 'eac53c387a819eb667e4e3fa967276ed55DE297F7272B45494FAE6F694E20D4C312F9907' #ССК(РС) Подрядчики_api
+        # self.token = '526cdec32ecf25b664182796a38c3c665D97F79D99283A9CA9F4B7A1AA40E8D449D356FE' #ССК(Т) Подрядчики_api
         self.wialon = Wialon()
 
         try:
@@ -44,7 +47,6 @@ class WialonManager:
 
     def exec_report(self, group, smena, from_time, to_time):
         result_rep = {}
-
         report = self.wialon.report_exec_report({
             'reportResourceId': self.res_id,
             'reportTemplateId': smena,
@@ -67,27 +69,31 @@ class WialonManager:
                 "tableIndex": 0,
                 "rowIndex": n
             })
-
             obj_name = rep_row[n]['c'][1]
             result_rep[obj_name] = defaultdict(list)
             for row1 in rep_sub_row:
-                unix_key = int(row1['c'][3][:-3]) - 7200
-                result_rep[obj_name][unix_key] = [
-                    row1['c'][0],  # номер строки
-                    row1['c'][1],  # имя
-                    int(row1['c'][3][:-3]) - 7200,  # начало
-                    int(row1['c'][5][:-3]) - 7200,  # конец
-                    row1['c'][6],  # часы в работе
-                    row1['c'][7],  # часы в дежурстве
-                    row1['c'][8],  # пробег
-                    round(float(row1['c'][9]), 2),  # часы в работе (коррк)
-                    round(float(row1['c'][10]), 2),  # часы в дежурстве (коррк)
-                    round(float(row1['c'][8]), 2),  # пробег (коррк)
+                # pprint(row1)
+                if 'Outside shifts' not in row1['c']:
+                    unix_key = int(row1['c'][3][:-3])  # - 7200
+                    result_rep[obj_name][unix_key] = [
 
-                    row1['c'][11]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
-                    # нач. положение
-                    row1['c'][12]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
-                    # кон. положение
-                ]
+                        row1['c'][0],  # номер строки
+                        row1['c'][1],  # имя
 
+                        int(row1['c'][3][:-3]) - 7200, #  начало
+                        int(row1['c'][5][:-3]) - 7200,  #  конец
+
+                        row1['c'][6],  # часы в работе
+                        row1['c'][7],  # часы в дежурстве
+                        row1['c'][8],  # пробег
+
+                        round(float(row1['c'][9]), 2),  # часы в работе (коррк)
+                        round(float(row1['c'][10]), 2),  # часы в дежурстве (коррк)
+                        round(float(row1['c'][8]), 2),  # пробег (коррк)
+
+                        row1['c'][11]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
+                        # нач. положение
+                        row1['c'][12]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
+                        # кон. положение
+                    ]
         return result_rep
