@@ -12,14 +12,14 @@ import time
 
 def handler_single(group, data, smena, from_time, to_time, f_date, t_date, f_dt, t_dt, path, count_smena, company=None):
     print('Формируем отчет...')
-    # try:
-    report_data = WialonManager().exec_report(data, smena[0], from_time, to_time)
-    print('Выгружаем данные в excel...')
-    ExcelManager().handler_excel(group, report_data, smena[1], f_date, t_date, f_dt, t_dt, path, count_smena, company=company)
-    print('Обработан')
-    # except:
-    #     print('Данных за период нет')
-    #     time.sleep(1)
+    try:
+        report_data = WialonManager().exec_report(data, smena[0], from_time, to_time)
+        print('Выгружаем данные в excel...')
+        ExcelManager().handler_excel(group, report_data, smena[1], f_date, t_date, f_dt, t_dt, path, count_smena, company=company)
+        print('Обработан')
+    except:
+        print('Данных за период нет')
+        time.sleep(1)
 
 
 if __name__ == '__main__':

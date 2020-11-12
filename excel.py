@@ -16,6 +16,7 @@ class ExcelManager:
     def handler_excel(self, contractor, report_data, smena, f_date, t_date, f_dt, t_dt, path, count_smena, company=None):
         if company:
             contractor_full = f'{company} - {contractor} '
+            contractor = company
         else:
             contractor_full = contractor
 
@@ -56,6 +57,7 @@ class ExcelManager:
         sheet.Cells(5, 4).Value = t_date
         sheet.Cells(5, 4).HorizontalAlignment = -4108
         sheet.Cells(6, 3).Value = 'подрядчик'
+
         sheet.Cells(6, 4).Value = contractor.replace('(ССК)', '').replace('(ССК-РС)', '').replace('(ССК-Т)', '')
         sheet.Cells(6, 4).HorizontalAlignment = -4108
         Selection = sheet.Range('C4:C6')
@@ -117,6 +119,7 @@ class ExcelManager:
         num_obj = 0
         time.sleep(30)
         for obj, data in report_data.items():
+
             sum_work = 0
             sum_duty = 0
             sum_mill = 0
@@ -145,72 +148,68 @@ class ExcelManager:
 
             while t_dt >= f_dt:
                 for n in range(0, count_smena):
+                    start_row += 1
                     num_el = str(num_obj) + '.' + str(k)
-                    sheet.Cells(start_row + k, 2).NumberFormat = "@"
-                    sheet.Cells(start_row + k, 2).HorizontalAlignment = -4152
-                    sheet.Cells(start_row + k, 2).Value = num_el
-                    sheet.Cells(start_row + k, 3).Value = f'({f_dt.strftime("%d.%m.%Y")}) Смена{n+1}'
-                    sheet.Cells(start_row + k, 6).Value = '0:00:00'
-                    sheet.Cells(start_row + k, 7).Value = '0:00:00'
-                    sheet.Cells(start_row + k, 8).Value = 0
-                    sheet.Cells(start_row + k, 9).Value = 0
-                    sheet.Cells(start_row + k, 10).Value = 0
-                    sheet.Cells(start_row + k, 11).Value = 0
+                    sheet.Cells(start_row, 2).NumberFormat = "@"
+                    sheet.Cells(start_row, 2).HorizontalAlignment = -4152
+                    sheet.Cells(start_row, 2).Value = num_el
+                    sheet.Cells(start_row, 3).Value = f'({f_dt.strftime("%d.%m.%Y")}) Смена{n+1} Нет_данных'
+                    sheet.Cells(start_row, 6).Value = '0:00:00'
+                    sheet.Cells(start_row, 7).Value = '0:00:00'
+                    sheet.Cells(start_row, 8).Value = 0
+                    sheet.Cells(start_row, 9).Value = 0
+                    sheet.Cells(start_row, 10).Value = 0
+                    sheet.Cells(start_row, 11).Value = 0
                     k += 1
+                    for number, travel in data_order.items():
+                        sheet.Cells(main_row, 13).Value = travel[11]
+                        sheet.Cells(main_row, 5).Value = \
+                            datetime.datetime.fromtimestamp(int(travel[3]) + 14400).strftime('%d.%m.%Y %H:%M:%S')
+
+                        if sheet.Cells(main_row, 12).Value is None:
+                            sheet.Cells(main_row, 4).Value = \
+                                datetime.datetime.fromtimestamp(int(travel[2]) + 14400).strftime('%d.%m.%Y %H:%M:%S')
+                            sheet.Cells(main_row, 12).Value = travel[10]
+
+                        # print(sheet.Cells(start_row, 3).Value)
+                        # print(travel[1])
+
+                        if sheet.Cells(start_row, 3):
+                            date, smena, k1 = sheet.Cells(start_row, 3).Value.split(' ')
+                            check_sheet = date + ' ' + smena
+                            if check_sheet == travel[1]:
+                                sheet.Cells(start_row, 3).Value = travel[1]
+                                sheet.Cells(start_row, 4).Value = \
+                                    datetime.datetime.fromtimestamp(int(travel[2]) + 14400).strftime(
+                                        '%d.%m.%Y %H:%M:%S')
+
+                                sheet.Cells(start_row, 5).Value = \
+                                    datetime.datetime.fromtimestamp(int(travel[3]) + 14400).strftime(
+                                        '%d.%m.%Y %H:%M:%S')
+
+                                sheet.Cells(start_row, 6).Value = travel[4]
+                                sheet.Cells(start_row, 7).Value = travel[5]
+                                sheet.Cells(start_row, 8).Value = travel[6]
+                                sheet.Cells(start_row, 9).Value = round(float(travel[7]), 0)
+                                sheet.Cells(start_row, 10).Value = round(float(travel[8]), 0)
+                                sheet.Cells(start_row, 11).Value = round(float(travel[9]), 0)
+
+                                sum_work += round(float(travel[7]), 0)
+                                sum_duty += round(float(travel[8]), 0)
+                                sum_mill += round(float(travel[9]), 0)
+
+                                sheet.Cells(start_row, 12).Value = travel[10]
+                                sheet.Cells(start_row, 13).Value = travel[11]
+                                break
+
                 delta = datetime.timedelta(days=1)
                 f_dt += delta
 
             f_dt = save_f_dt
-            i = 0
-            # pprint(data_order)
 
-            for number, travel in data_order.items():
-                start_row += 1
-                sheet.Cells(main_row, 13).Value = travel[11]
-                sheet.Cells(main_row, 5).Value = \
-                    datetime.datetime.fromtimestamp(int(travel[3])+14400).strftime('%d.%m.%Y %H:%M:%S')
-
-                if sheet.Cells(main_row, 12).Value is None:
-                    sheet.Cells(main_row, 4).Value = \
-                    datetime.datetime.fromtimestamp(int(travel[2])+14400).strftime('%d.%m.%Y %H:%M:%S')
-                    sheet.Cells(main_row, 12).Value = travel[10]
-
-                print(sheet.Cells(start_row, 3).Value)
-                print(travel[1])
-
-                if sheet.Cells(start_row, 3):
-                    if sheet.Cells(start_row, 3).Value != travel[1]:
-                        sheet.Cells(start_row, 3).Value += ' Нет данных'
-                else:
-
-                    sheet.Cells(start_row, 4).Value = \
-                        datetime.datetime.fromtimestamp(int(travel[2])+14400).strftime('%d.%m.%Y %H:%M:%S')
-
-                    sheet.Cells(start_row, 5).Value = \
-                        datetime.datetime.fromtimestamp(int(travel[3])+14400).strftime('%d.%m.%Y %H:%M:%S')
-
-                    sheet.Cells(start_row, 6).Value = travel[4]
-                    sheet.Cells(start_row, 7).Value = travel[5]
-                    sheet.Cells(start_row, 8).Value = travel[6]
-                    sheet.Cells(start_row, 9).Value = round(float(travel[7]), 0)
-                    sheet.Cells(start_row, 10).Value = round(float(travel[8]), 0)
-                    sheet.Cells(start_row, 11).Value = round(float(travel[9]), 0)
-
-                    sum_work += round(float(travel[7]), 0)
-                    sum_duty += round(float(travel[8]), 0)
-                    sum_mill += round(float(travel[9]), 0)
-
-                    sheet.Cells(start_row, 12).Value = travel[10]
-                    sheet.Cells(start_row, 13).Value = travel[11]
-                    obj_row += 1
-
-            f_dt = save_f_dt
-
-            start_row = main_row + k - 1
-
-            sheet.Cells(main_row, 6).FormulaR1C1 = f"=SUM(R[1]C:R[{obj_row-1}]C)"
-            sheet.Cells(main_row, 7).FormulaR1C1 = f"=SUM(R[1]C:R[{obj_row - 1}]C)"
-            sheet.Cells(main_row, 8).FormulaR1C1 = f"=SUM(R[1]C:R[{obj_row - 1}]C)"
+            sheet.Cells(main_row, 6).FormulaR1C1 = f"=SUM(R[1]C:R[{k-1}]C)"
+            sheet.Cells(main_row, 7).FormulaR1C1 = f"=SUM(R[1]C:R[{k-1}]C)"
+            sheet.Cells(main_row, 8).FormulaR1C1 = f"=SUM(R[1]C:R[{k-1}]C)"
 
             Selection = sheet.Range(sheet.Cells(main_row + 1, 4), sheet.Cells(start_row, 4))
             Selection.Rows.Group()

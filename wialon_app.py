@@ -9,8 +9,8 @@ import time
 class WialonManager:
     def __init__(self):
         # self.token = '1e3f50514d35becfaf1b9ec8ff42f80014125DD4DBEADF212ED7DC3ED42D71466C71DF06'  # Основной
-        self.token = '290a6913b07b4afce549894ab74c1d87913BAACC55F364819505234D43FAB9FA89FC72A6'  #ССК(п) Подрядчики_api
-        # self.token = 'eac53c387a819eb667e4e3fa967276ed55DE297F7272B45494FAE6F694E20D4C312F9907' #ССК(РС) Подрядчики_api
+        # self.token = '290a6913b07b4afce549894ab74c1d87913BAACC55F364819505234D43FAB9FA89FC72A6'  #ССК(п) Подрядчики_api
+        self.token = 'eac53c387a819eb667e4e3fa967276ed55DE297F7272B45494FAE6F694E20D4C312F9907' #ССК(РС) Подрядчики_api
         # self.token = '526cdec32ecf25b664182796a38c3c665D97F79D99283A9CA9F4B7A1AA40E8D449D356FE' #ССК(Т) Подрядчики_api
         self.wialon = Wialon()
 
@@ -74,7 +74,7 @@ class WialonManager:
             for row1 in rep_sub_row:
                 # pprint(row1)
                 if 'Outside shifts' not in row1['c']:
-                    unix_key = int(row1['c'][3][:-3])  # - 7200
+                    unix_key = int(row1['c'][3][:-3]) - 7200
                     result_rep[obj_name][unix_key] = [
 
                         row1['c'][0],  # номер строки
