@@ -13,14 +13,14 @@ class ExcelManager:
     def __init__(self):
         self.format_file = '.xlsx'
 
-    def handler_excel(self, contractor, report_data, smena, f_date, t_date, f_dt, t_dt, path, count_smena, company=None):
+    def handler_excel(self, contractor, report_data, smena_n, f_date, t_date, f_dt, t_dt, path, count_smena, company=None):
         if company:
             contractor_full = f'{company} - {contractor} '
             contractor = company
         else:
             contractor_full = contractor
 
-        filename = contractor_full + ' ' + smena + f' ({f_date}-{t_date})' + self.format_file
+        filename = contractor_full + ' ' + smena_n + f' ({f_date}-{t_date})' + self.format_file
         path = os.path.join(path, filename)
 
         wb = Workbook()
@@ -95,27 +95,30 @@ class ExcelManager:
         sheet.Cells(start_row, 3).Value = 'Группировка'
         sheet.Cells(start_row, 3).ColumnWidth = 25
         sheet.Cells(start_row, 4).Value = 'Начало'
-        sheet.Cells(start_row, 4).ColumnWidth = 20
+        sheet.Cells(start_row, 4).ColumnWidth = 18
         sheet.Cells(start_row, 5).Value = 'Конец'
-        sheet.Cells(start_row, 5).ColumnWidth = 20
-        sheet.Cells(start_row, 6).Value = 'Часы               (в Работе)'
-        sheet.Cells(start_row, 7).Value = 'Часы (Дежурство)'
-        sheet.Cells(start_row, 8).Value = 'Пробег'
-        sheet.Cells(start_row, 9).Value = 'Часы               (в Работе) скорректир.'
-        sheet.Cells(start_row, 10).Value = 'Часы (Дежурство) скорректир.'
-        sheet.Cells(start_row, 11).Value = 'Пробег скоррект'
-        sheet.Cells(start_row, 11).ColumnWidth = 15
+        sheet.Cells(start_row, 5).ColumnWidth = 18
+
+        sheet.Cells(start_row, 11).Value = 'Часы               (в Работе)'
+        sheet.Cells(start_row, 12).Value = 'Часы (Дежурство)'
+        sheet.Cells(start_row, 13).Value = 'Пробег'
+
+        sheet.Cells(start_row, 6).Value = 'Часы               (в Работе) скорректир.'
+        sheet.Cells(start_row, 7).Value = 'Часы (Дежурство) скорректир.'
+        sheet.Cells(start_row, 8).Value = 'Пробег скоррект'
+
+        sheet.Cells(start_row, 11).ColumnWidth = 13
         sheet.Cells(start_row, 2).EntireRow.HorizontalAlignment = -4108
         sheet.Cells(start_row, 2).EntireRow.WrapText = True
 
         Selection = sheet.Range('F1:K1')
         Selection.ColumnWidth = 12
 
-        sheet.Cells(start_row, 12).Value = 'Нач. положение'
-        sheet.Cells(start_row, 13).Value = 'Кон. положение'
+        sheet.Cells(start_row, 9).Value = 'Нач. положение'
+        sheet.Cells(start_row, 10).Value = 'Кон. положение'
 
-        sheet.Cells(start_row, 12).ColumnWidth = 45
-        sheet.Cells(start_row, 13).ColumnWidth = 45
+        sheet.Cells(start_row, 9).ColumnWidth = 25
+        sheet.Cells(start_row, 10).ColumnWidth = 25
         num_obj = 0
         time.sleep(30)
         for obj, data in report_data.items():
@@ -153,23 +156,31 @@ class ExcelManager:
                     sheet.Cells(start_row, 2).NumberFormat = "@"
                     sheet.Cells(start_row, 2).HorizontalAlignment = -4152
                     sheet.Cells(start_row, 2).Value = num_el
-                    sheet.Cells(start_row, 3).Value = f'({f_dt.strftime("%d.%m.%Y")}) Смена{n+1} Нет_данных'
-                    sheet.Cells(start_row, 6).Value = '0:00:00'
-                    sheet.Cells(start_row, 7).Value = '0:00:00'
+
+                    if smena_n == 'Суточная смена':
+                        sheet.Cells(start_row, 3).Value = f'({f_dt.strftime("%d.%m.%Y")}) Сутки Нет_данных'
+                    elif smena_n == 'Смена 2':
+                        sheet.Cells(start_row, 3).Value = f'({f_dt.strftime("%d.%m.%Y")}) Смена2 Нет_данных'
+                    elif smena_n == 'Смена 3':
+                        sheet.Cells(start_row, 3).Value = f'({f_dt.strftime("%d.%m.%Y")}) Смена3 Нет_данных'
+                    else:
+                        sheet.Cells(start_row, 3).Value = f'({f_dt.strftime("%d.%m.%Y")}) Смена{n+1} Нет_данных'
+
+                    sheet.Cells(start_row, 11).Value = '0:00:00'
+                    sheet.Cells(start_row, 12).Value = '0:00:00'
+                    sheet.Cells(start_row, 13).Value = 0
+
+                    sheet.Cells(start_row, 6).Value = 0
+                    sheet.Cells(start_row, 7).Value = 0
                     sheet.Cells(start_row, 8).Value = 0
-                    sheet.Cells(start_row, 9).Value = 0
-                    sheet.Cells(start_row, 10).Value = 0
-                    sheet.Cells(start_row, 11).Value = 0
                     k += 1
                     for number, travel in data_order.items():
-                        sheet.Cells(main_row, 13).Value = travel[11]
+                        sheet.Cells(main_row, 10).Value = travel[11]
                         sheet.Cells(main_row, 5).Value = \
-                            datetime.datetime.fromtimestamp(int(travel[3]) + 14400).strftime('%d.%m.%Y %H:%M:%S')
+                            datetime.datetime.fromtimestamp(int(travel[3])).strftime('%d.%m.%Y %H:%M:%S') #+14400
 
-                        if sheet.Cells(main_row, 12).Value is None:
-                            sheet.Cells(main_row, 4).Value = \
-                                datetime.datetime.fromtimestamp(int(travel[2]) + 14400).strftime('%d.%m.%Y %H:%M:%S')
-                            sheet.Cells(main_row, 12).Value = travel[10]
+                        if sheet.Cells(main_row, 9).Value is None:
+                            sheet.Cells(main_row, 9).Value = travel[10]
 
                         # print(sheet.Cells(start_row, 3).Value)
                         # print(travel[1])
@@ -180,26 +191,31 @@ class ExcelManager:
                             if check_sheet == travel[1]:
                                 sheet.Cells(start_row, 3).Value = travel[1]
                                 sheet.Cells(start_row, 4).Value = \
-                                    datetime.datetime.fromtimestamp(int(travel[2]) + 14400).strftime(
-                                        '%d.%m.%Y %H:%M:%S')
+                                    datetime.datetime.fromtimestamp(int(travel[2])).strftime(
+                                        '%d.%m.%Y %H:%M:%S') #+14400
+
+                                if sheet.Cells(main_row, 4).Value is None:
+                                    sheet.Cells(main_row, 4).Value = \
+                                        datetime.datetime.fromtimestamp(int(travel[2])).strftime('%d.%m.%Y %H:%M:%S')
 
                                 sheet.Cells(start_row, 5).Value = \
-                                    datetime.datetime.fromtimestamp(int(travel[3]) + 14400).strftime(
-                                        '%d.%m.%Y %H:%M:%S')
+                                    datetime.datetime.fromtimestamp(int(travel[3])).strftime(
+                                        '%d.%m.%Y %H:%M:%S') #+14400
 
-                                sheet.Cells(start_row, 6).Value = travel[4]
-                                sheet.Cells(start_row, 7).Value = travel[5]
-                                sheet.Cells(start_row, 8).Value = travel[6]
-                                sheet.Cells(start_row, 9).Value = round(float(travel[7]), 0)
-                                sheet.Cells(start_row, 10).Value = round(float(travel[8]), 0)
-                                sheet.Cells(start_row, 11).Value = round(float(travel[9]), 0)
+                                sheet.Cells(start_row, 11).Value = travel[4]
+                                sheet.Cells(start_row, 12).Value = travel[5]
+                                sheet.Cells(start_row, 13).Value = travel[6]
+
+                                sheet.Cells(start_row, 6).Value = round(float(travel[7]), 0) #9
+                                sheet.Cells(start_row, 7).Value = round(float(travel[8]), 0) #10
+                                sheet.Cells(start_row, 8).Value = round(float(travel[9]), 0) #11
 
                                 sum_work += round(float(travel[7]), 0)
                                 sum_duty += round(float(travel[8]), 0)
                                 sum_mill += round(float(travel[9]), 0)
 
-                                sheet.Cells(start_row, 12).Value = travel[10]
-                                sheet.Cells(start_row, 13).Value = travel[11]
+                                sheet.Cells(start_row, 9).Value = travel[10]
+                                sheet.Cells(start_row, 10).Value = travel[11]
                                 break
 
                 delta = datetime.timedelta(days=1)
@@ -207,16 +223,16 @@ class ExcelManager:
 
             f_dt = save_f_dt
 
-            sheet.Cells(main_row, 6).FormulaR1C1 = f"=SUM(R[1]C:R[{k-1}]C)"
-            sheet.Cells(main_row, 7).FormulaR1C1 = f"=SUM(R[1]C:R[{k-1}]C)"
-            sheet.Cells(main_row, 8).FormulaR1C1 = f"=SUM(R[1]C:R[{k-1}]C)"
+            sheet.Cells(main_row, 11).FormulaR1C1 = f"=SUM(R[1]C:R[{k-1}]C)"
+            sheet.Cells(main_row, 12).FormulaR1C1 = f"=SUM(R[1]C:R[{k-1}]C)"
+            sheet.Cells(main_row, 13).FormulaR1C1 = f"=SUM(R[1]C:R[{k-1}]C)"
 
             Selection = sheet.Range(sheet.Cells(main_row + 1, 4), sheet.Cells(start_row, 4))
             Selection.Rows.Group()
 
-            sheet.Cells(main_row, 9).Value = sum_work
-            sheet.Cells(main_row, 10).Value = sum_duty
-            sheet.Cells(main_row, 11).Value = sum_mill
+            sheet.Cells(main_row, 6).Value = sum_work
+            sheet.Cells(main_row, 7).Value = sum_duty
+            sheet.Cells(main_row, 8).Value = sum_mill
 
         Selection = sheet.Range('B8:M' + str(start_row))
         Selection.Borders.Weight = 2
@@ -293,6 +309,9 @@ class ExcelManager:
 
         Selection.Borders(xlEdgeLeft).LineStyle = xlDash
         Selection.Borders(xlEdgeLeft).Weight = xlMedium
+
+        Selection = sheet.Range(f'K{start_row}:M{start_row}')
+        Selection.EntireColumn.Hidden = True
 
         work_b1.Save()
         work_b1.Close()

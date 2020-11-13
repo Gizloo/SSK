@@ -1,16 +1,17 @@
+import datetime
 import time
 from collections import defaultdict
 from pprint import pprint
-
 from wialon import flags, Wialon, WialonError
 import time
 
 
 class WialonManager:
+
     def __init__(self):
-        # self.token = '1e3f50514d35becfaf1b9ec8ff42f80014125DD4DBEADF212ED7DC3ED42D71466C71DF06'  # Основной
+        self.token = '1e3f50514d35becfaf1b9ec8ff42f80014125DD4DBEADF212ED7DC3ED42D71466C71DF06'  # Основной
         # self.token = '290a6913b07b4afce549894ab74c1d87913BAACC55F364819505234D43FAB9FA89FC72A6'  #ССК(п) Подрядчики_api
-        self.token = 'eac53c387a819eb667e4e3fa967276ed55DE297F7272B45494FAE6F694E20D4C312F9907' #ССК(РС) Подрядчики_api
+        # self.token = 'eac53c387a819eb667e4e3fa967276ed55DE297F7272B45494FAE6F694E20D4C312F9907' #ССК(РС) Подрядчики_api
         # self.token = '526cdec32ecf25b664182796a38c3c665D97F79D99283A9CA9F4B7A1AA40E8D449D356FE' #ССК(Т) Подрядчики_api
         self.wialon = Wialon()
 
@@ -21,8 +22,10 @@ class WialonManager:
             time.sleep(5)
             return
         self.wialon.sid = login['eid']
+        self.wialon.render_set_locale({"tzOffset": 18000, "language": 'ru', "formatDate": "%Y-%m-%E %H:%M:%S"})
         self.res_id = 21922430
         self.base_group = {}
+
 
     def api_get_groups(self):
         spec = {
@@ -46,6 +49,8 @@ class WialonManager:
         return obj['item']['nm']
 
     def exec_report(self, group, smena, from_time, to_time):
+        # tz = 0
+        tz = 7200
         result_rep = {}
         report = self.wialon.report_exec_report({
             'reportResourceId': self.res_id,
@@ -61,7 +66,6 @@ class WialonManager:
             "indexFrom": 0,
             "indexTo": rows_obj
         })
-
         # pprint(rep_row)
 
         for n in range(0, rows_obj):
@@ -74,21 +78,29 @@ class WialonManager:
             for row1 in rep_sub_row:
                 # pprint(row1)
                 if 'Outside shifts' not in row1['c']:
-                    unix_key = int(row1['c'][3][:-3]) - 7200
+                    unix_key = int(row1['c'][3][:-3]) + tz
+                    if smena == 12:
+                        work_h = round(float(row1['c'][9]), 2)
+                        time_start = int(datetime.datetime.fromtimestamp(int(row1['c'][3][:-3]) + tz).hour)
+                        time_end = int(datetime.datetime.fromtimestamp(int(row1['c'][5][:-3]) + tz).hour)
+                        duty_h = time_end - time_start
+                    else:
+                        work_h = round(float(row1['c'][9]), 2)
+                        duty_h = round(float(row1['c'][10]), 2)
                     result_rep[obj_name][unix_key] = [
 
                         row1['c'][0],  # номер строки
                         row1['c'][1],  # имя
 
-                        int(row1['c'][3][:-3]) - 7200, #  начало
-                        int(row1['c'][5][:-3]) - 7200,  #  конец
+                        int(row1['c'][3][:-3]) + tz, #  начало
+                        int(row1['c'][5][:-3]) + tz,  #  конец
 
                         row1['c'][6],  # часы в работе
                         row1['c'][7],  # часы в дежурстве
                         row1['c'][8],  # пробег
 
-                        round(float(row1['c'][9]), 2),  # часы в работе (коррк)
-                        round(float(row1['c'][10]), 2),  # часы в дежурстве (коррк)
+                        work_h,  # часы в работе (коррк)
+                        duty_h,  # часы в дежурстве (коррк)
                         round(float(row1['c'][8]), 2),  # пробег (коррк)
 
                         row1['c'][11]['t'].replace('Road', 'Трасса').replace('km', 'км').replace('from', 'от'),
